@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBrakka — Order Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--surface:#161616;--surface2:#1e1e1e;--border:#2c2c2c;--text:#f0f0f0;--text2:#888;--text3:#555;--accent:#e63946;--teal:#00e5c0;--blue:#4da6ff;--orange:#ff9a3c;--green:#6bcb77;--purple:#a78bfa}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-name{font-size:18px;font-weight:800;letter-spacing:.06em}
+.brand-sub{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.12em;padding:2px 8px;border:1px solid var(--border);border-radius:3px}
+.dbadge{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;margin-left:4px}
+.tright{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text2)}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.ldot.L{background:var(--orange);animation:bl .7s infinite}
+.ldot.E{background:var(--accent)}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+.rbtn{background:var(--accent);color:#fff;font-weight:700;font-size:11px;border:none;padding:6px 14px;border-radius:5px;cursor:pointer}
+.rbtn:hover{opacity:.85}
+.pbar{height:2px;background:var(--accent);position:absolute;bottom:0;left:0;transition:width 1s linear}
+.main{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.mc.r::after{background:var(--accent)}.mc.b::after{background:var(--blue)}.mc.o::after{background:var(--orange)}.mc.g::after{background:var(--green)}.mc.p::after{background:var(--purple)}
+.mcl{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.mcv{font-size:38px;font-weight:800;line-height:1}
+.mcs{font-size:10px;color:var(--text3);margin-top:4px}
+.ttabs{display:flex;gap:6px;flex-wrap:wrap}
+.ttab{font-size:11px;font-weight:600;padding:5px 13px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;letter-spacing:.04em}
+.ttab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.crow{display:grid;grid-template-columns:1fr 380px;gap:14px}
+.brow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.ptitle{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+.bl{display:flex;flex-direction:column;gap:7px}
+.bi{display:grid;grid-template-columns:120px 1fr 36px;align-items:center;gap:10px}
+.bn{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt{background:var(--surface2);border-radius:2px;height:5px;overflow:hidden}
+.bf{height:5px;border-radius:2px}
+.bv{font-size:11px;font-weight:700;text-align:right}
+.dw{display:flex;align-items:center;gap:14px}
+.dleg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.di{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.dd{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.tbw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:7px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+thead th.r{text-align:right}
+tbody td{padding:8px 10px;border-bottom:1px solid #1a1a1a;color:var(--text);font-size:12px}
+tbody td.r{text-align:right}
+tbody tr:hover{background:var(--surface2)}
+.bev{background:rgba(77,166,255,.15);color:var(--blue);font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap}
+.uit{background:rgba(255,154,60,.15);color:var(--orange);font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap}
+.afg{background:rgba(107,203,119,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap}
+.empty{text-align:center;color:var(--text3);padding:32px;font-size:12px}
+.fbar{display:flex;align-items:center;justify-content:space-between;padding:8px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);background:var(--surface)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-name">MyBrakka</span>
+    <span class="brand-sub">WICS</span>
+    <span class="dbadge" id="D-date"></span>
+  </div>
+  <div class="tright">
+    <span id="D-upd"></span>
+    <span class="ldot L" id="D-dot"></span>
+    <span id="D-cd"></span>
+    <button class="rbtn" onclick="Dfetch()">&#x21BB; Refresh</button>
+  </div>
+  <div class="pbar" id="D-pbar" style="width:100%"></div>
+</div>
+<div class="main">
+  <div class="metrics">
+    <div class="mc r"><div class="mcl">Totaal vandaag</div><div class="mcv" id="D-tot" style="color:var(--accent)">-</div><div class="mcs">alle orders</div></div>
+    <div class="mc b"><div class="mcl">Bevestigd</div><div class="mcv" id="D-bev" style="color:var(--blue)">-</div><div class="mcs" id="D-bevs"></div></div>
+    <div class="mc o"><div class="mcl">In uitvoering</div><div class="mcv" id="D-uit" style="color:var(--orange)">-</div><div class="mcs" id="D-uits"></div></div>
+    <div class="mc g"><div class="mcl">Afgehandeld</div><div class="mcv" id="D-afg" style="color:var(--green)">-</div><div class="mcs" id="D-afgs"></div></div>
+    <div class="mc p"><div class="mcl">Landen</div><div class="mcv" id="D-land" style="color:var(--purple)">-</div><div class="mcs">bestemmingen</div></div>
+  </div>
+  <div class="ttabs">
+    <button class="ttab active" onclick="Dtype('alle',this)">ALLE <span id="Dtc-alle"></span></button>
+    <button class="ttab" onclick="Dtype('B2C',this)">B2C <span id="Dtc-B2C"></span></button>
+    <button class="ttab" onclick="Dtype('B2B',this)">B2B <span id="Dtc-B2B"></span></button>
+    <button class="ttab" onclick="Dtype('BPSP',this)">BPSP <span id="Dtc-BPSP"></span></button>
+    <button class="ttab" onclick="Dtype('STR',this)">STR <span id="Dtc-STR"></span></button>
+  </div>
+  <div class="crow">
+    <div class="panel"><div class="ptitle">Orders per type</div><div style="position:relative;height:210px"><canvas id="D-bar"></canvas></div></div>
+    <div class="panel"><div class="ptitle">Verdeling per land</div><div class="dw"><div style="position:relative;width:140px;height:140px;flex-shrink:0"><canvas id="D-dgh"></canvas></div><div class="dleg" id="D-dleg"></div></div></div>
+  </div>
+  <div class="brow">
+    <div class="panel"><div class="ptitle">Bestemmingslanden</div><div class="bl" id="D-lbl"></div></div>
+    <div class="panel"><div class="ptitle">Statusverdeling</div><div class="bl" id="D-sbl"></div></div>
+  </div>
+  <div class="panel"><div class="ptitle">Alle orders vandaag</div><div class="tbw"><table><thead><tr><th>Order #</th><th>Referentie</th><th>Type</th><th>Status</th><th>Stad</th><th>Land</th><th class="r">Datum</th></tr></thead><tbody id="D-tbl"><tr><td colspan="7" class="empty">Laden...</td></tr></tbody></table></div></div>
+</div>
+<div class="fbar"><span id="D-fl"></span><span style="color:var(--accent);font-weight:700" id="D-fr"></span></div>
+<script>
+const BASE='https://servicelayer.wics.nl',K='NFKagRJKVYaJhaaEhLrG',S='FyzdufStPFBQsWFGwCEb';
+const TYPES=['B2C','B2B','BPSP','STR'],BEV=['30'],UIT=['35','40','42','50'],AFG=['60','65','70'],ALLE=[...BEV,...UIT,...AFG];
+const CN={NL:'Netherlands',GB:'United Kingdom',BE:'Belgium',US:'United States',FR:'France',DE:'Germany',ES:'Spain',CA:'Canada',AT:'Austria',IT:'Italy',SE:'Sweden',DK:'Denmark',PL:'Poland',CH:'Switzerland',NO:'Norway',FI:'Finland',PT:'Portugal',CZ:'Czech Republic'};
+const CC=['#e63946','#4da6ff','#ff9a3c','#6bcb77','#a78bfa','#ffd93d','#ff6b9d','#38bdf8','#fb923c','#00e5c0'];
+let allO=[],aT='alle',cd=60,tmr=null,bC=null,dC=null;
+const tod=()=>new Date().toISOString().split('T')[0];
+const au=()=>'Basic '+btoa(K+':'+S);
+function sc(o){const r=String(o.statusCode||'').trim();if(/^d+$/.test(r))return r.padStart(2,'0');const l=r.toLowerCase();if(l.includes('bevestigd'))return'30';if(l.includes('batch'))return'35';if(l.includes('uitvoering'))return'40';if(l.includes('geconsolideerd'))return'42';if(l.includes('gedeeltelijk'))return'50';if(l.includes('onvolledig'))return'65';if(l.includes('volledig'))return'60';if(l.includes('geen'))return'70';return r;}
+function ot(o){const t=String(o.type||o.method||'').toUpperCase().trim();if(t==='B2C'||t==='WEB')return'B2C';if(t==='B2B'||t==='B2BW')return'B2B';if(['BPSP','STR'].includes(t))return t;return t||'OVERIG';}
+window.Dfetch=async function(){document.getElementById('D-dot').className='ldot L';try{let all=[],pg=1;while(true){const r=await fetch(BASE+'/api/order?deliveryDate='+tod()+'&page='+pg+'&pageSize=100',{headers:{'Authorization':au(),'Accept':'application/json'},signal:AbortSignal.timeout(12000)});if(!r.ok)break;const j=await r.json();const data=Array.isArray(j.data)?j.data:[];all=[...all,...data];if(data.length<100)break;pg++;}allO=all.map(o=>({...o,_s:sc(o),_t:ot(o),_c:o.deliveryAddress?.country||'?',_stad:o.deliveryAddress?.city||''})).filter(o=>ALLE.includes(o._s));const now=new Date();document.getElementById('D-date').textContent=now.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(///g,'-');document.getElementById('D-upd').textContent='Bijgewerkt: '+now.toLocaleTimeString('nl-NL');document.getElementById('D-fl').textContent=now.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});document.getElementById('D-dot').className='ldot'+(allO.length?'':' E');}catch(e){document.getElementById('D-dot').className='ldot E';}Drender();Dreset();};
+function filt(){return aT==='alle'?allO:allO.filter(o=>o._t===aT);}
+const cn=(os,cs)=>os.filter(o=>cs.includes(o._s)).length,ct=(os,t)=>os.filter(o=>o._t===t).length;
+function Drender(){const f=filt(),tot=f.length,bev=cn(f,BEV),uit=cn(f,UIT),afg=cn(f,AFG),land=new Set(f.map(o=>o._c)).size;document.getElementById('D-tot').textContent=tot;document.getElementById('D-bev').textContent=bev;document.getElementById('D-uit').textContent=uit;document.getElementById('D-afg').textContent=afg;document.getElementById('D-land').textContent=land;document.getElementById('D-bevs').textContent=Math.round(bev/Math.max(tot,1)*100)+'% van totaal';document.getElementById('D-uits').textContent=Math.round(uit/Math.max(tot,1)*100)+'% van totaal';document.getElementById('D-afgs').textContent=Math.round(afg/Math.max(tot,1)*100)+'% van totaal';document.getElementById('D-fr').textContent=tot+' orders vandaag';document.getElementById('Dtc-alle').textContent='('+allO.length+')';TYPES.forEach(t=>{const e=document.getElementById('Dtc-'+t);if(e)e.textContent='('+ct(allO,t)+')';});const at=TYPES.filter(t=>ct(f,t)>0);if(bC)bC.destroy();bC=new Chart(document.getElementById('D-bar'),{type:'bar',data:{labels:at,datasets:[{label:'Bevestigd',data:at.map(t=>cn(f.filter(o=>o._t===t),BEV)),backgroundColor:'#4da6ff',borderRadius:3,stack:'s'},{label:'In uitvoering',data:at.map(t=>cn(f.filter(o=>o._t===t),UIT)),backgroundColor:'#ff9a3c',borderRadius:3,stack:'s'},{label:'Afgehandeld',data:at.map(t=>cn(f.filter(o=>o._t===t),AFG)),backgroundColor:'#e63946',borderRadius:3,stack:'s'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:'#888',font:{size:11},boxWidth:10,padding:12}}},scales:{x:{stacked:true,ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'}},y:{stacked:true,ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.06)'}}}}});const lc={};f.forEach(o=>{const c=CN[o._c]||o._c;lc[c]=(lc[c]||0)+1;});const tl=Object.entries(lc).sort((a,b)=>b[1]-a[1]).slice(0,10);if(dC)dC.destroy();dC=new Chart(document.getElementById('D-dgh'),{type:'doughnut',data:{labels:tl.map(x=>x[0]),datasets:[{data:tl.map(x=>x[1]),backgroundColor:CC,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false}}}});document.getElementById('D-dleg').innerHTML=tl.map((x,i)=>'<div class="di"><span class="dd" style="background:'+CC[i]+'"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x[0]+'</span><strong style="color:#ccc;margin-left:4px">'+x[1]+'</strong></div>').join('');const tll=Object.entries(lc).sort((a,b)=>b[1]-a[1]).slice(0,12),ml=tll[0]?.[1]||1;document.getElementById('D-lbl').innerHTML=tll.map((x,i)=>'<div class="bi"><div class="bn">'+x[0]+'</div><div class="bt"><div class="bf" style="width:'+Math.round(x[1]/ml*100)+'%;background:'+CC[i%CC.length]+'"></div></div><div class="bv" style="color:'+CC[i%CC.length]+'">'+x[1]+'</div></div>').join('')||'<div class="empty">Geen data</div>';const st=[{l:'Bevestigd',n:bev,c:'#4da6ff'},{l:'In uitvoering',n:uit,c:'#ff9a3c'},{l:'Afgehandeld',n:afg,c:'#e63946'}],ms=Math.max(...st.map(s=>s.n),1);document.getElementById('D-sbl').innerHTML=st.map(s=>'<div class="bi"><div class="bn">'+s.l+'</div><div class="bt"><div class="bf" style="width:'+Math.round(s.n/ms*100)+'%;background:'+s.c+'"></div></div><div class="bv" style="color:'+s.c+'">'+s.n+'</div></div>').join('');const sl=s=>BEV.includes(s)?'<span class="bev">Bevestigd</span>':UIT.includes(s)?'<span class="uit">In uitvoering</span>':AFG.includes(s)?'<span class="afg">Afgehandeld</span>':s;const rows=f.slice().sort((a,b)=>Number(b.number)-Number(a.number)).slice(0,200);document.getElementById('D-tbl').innerHTML=rows.length?rows.map(o=>'<tr><td style="color:var(--text2)">'+o.number+'</td><td style="color:var(--text2)">'+(o.reference||o.additionalReference||'')+'</td><td style="color:var(--accent);font-weight:700">'+o._t+'</td><td>'+sl(o._s)+'</td><td style="color:var(--text2)">'+o._stad+'</td><td style="color:var(--text2)">'+(CN[o._c]||o._c)+'</td><td class="r" style="color:var(--text3)">'+(o.deliveryDate||'')+'</td></tr>').join(''):'<tr><td colspan="7" class="empty">Geen orders gevonden voor vandaag</td></tr>';}
+window.Dtype=function(t,btn){aT=t;document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');Drender();};
+function Dreset(){cd=60;if(tmr)clearInterval(tmr);const pb=document.getElementById('D-pbar');tmr=setInterval(()=>{cd--;const e=document.getElementById('D-cd');if(e)e.textContent='Refresh over '+cd+'s';if(pb)pb.style.width=(cd/60*100)+'%';if(cd<=0)Dfetch();},1000);}
+document.getElementById('D-date').textContent=new Date().toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(///g,'-');
+Dfetch();
+</script>
+</body>
+</html>
